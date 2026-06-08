@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Site {
+  id          String   @id @default(cuid())
+  name        String
+  address     String?
+  contactName String?
+  contactEmail String?
+  contactPhone String?
+  notes       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orders      Order[]
+}
+
+model MenuCategory {
+  id        String     @id @default(cuid())
+  name      String
+  sortOrder Int        @default(0)
+  menuItems MenuItem[]
+}
+
+model MenuItem {
+  id           String        @id @default(cuid())
+  name         String
+  description  String?
+  unitLabel    String        @default("each")  // "each", "per dozen", "per case of 24", etc.
+  bulkQty      Int           @default(1)        // how many individual units in one "bulk" order unit
+  price        Decimal       @default(0) @db.Decimal(10, 2)
+  isActive     Boolean       @default(true)
+  category     MenuCategory  @relation(fields: [categoryId], references: [id])
+  categoryId   String
+  createdAt    DateTime      @default(now())
+  orderItems   OrderItem[]
+}
+
+model Menu {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  orders      Order[]
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  site        Site        @relation(fields: [siteId], references: [id])
+  siteId      String
+  menu        Menu        @relation(fields: [menuId], references: [id])
+  menuId      String
+  deliveryDate DateTime
+  status      OrderStatus @default(PENDING)
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  items       OrderItem[]
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId     String
+  menuItem    MenuItem @relation(fields: [menuItemId], references: [id])
+  menuItemId  String
+  quantity    Int
+  unitPrice   Decimal  @db.Decimal(10, 2)
+  notes       String?
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
