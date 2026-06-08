@@ -8,7 +8,7 @@ const prisma = new PrismaClient()
 const PORT = process.env.PORT || 3001
 
 app.use(cors({
-    origin: process.env.NEXT_PUBLIC_API_UR || '*',
+    origin: process.env.NEXT_PUBLIC_API_URL || '*',
     credentials: true,
   }))
 
